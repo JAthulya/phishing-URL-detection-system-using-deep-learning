@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+ <div class="login">
+<!--From https://codepen.io/frytyler/pen/EGdtg-->
+<head>
+  <meta charset="UTF-8">
+  <title>ML API</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/index.css')}}">
+  
+</head>
+
+<body>
+
+<div class="bodi">
+ 
+	<h1>URL annalyser</h1>
+
+     <!-- Main Input For Receiving Query to our ML -->
+    <form action="{{ url_for('predict')}}"method="post">
+    	<input type="text" name="experience" placeholder="Experience" required="required" />
+        
+
+        <button type="submit" class="btn btn-primary btn-block btn-large">Predict</button>
+    </form>
+
+        </br>{{hidden_msg}}
+        </br>{{status_value}}
+        </br>prediction level = {{ prediction_text }}
+        </br>prediction = {{ prediction_text1 }}
+        </br>URL_issued_to = {{URL_issued_to}}
+        </br>URL_issued_by = {{URL_issued_by}}
+        </br> Domain creation date = {{created_date}}
+        </br> Domain expiration date = {{expired_date}}
+        </br> Domain Age in days = {{domain_age}}
+        </br> Prediction from featurebased model = {{featurebase_predict}}
+ 
+ 
+</div>
+</body>
+ </div>
+</html>
