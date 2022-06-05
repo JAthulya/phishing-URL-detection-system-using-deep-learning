@@ -12,8 +12,17 @@ import urllib.request
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
 import tensorflow as tf
+import ssl, socket
 
 df = pd.read_csv('test.csv')
+
+domain = input("enter the URL:")
+list= []
+for i in df.url:
+    forward = domain
+    list.append(forward)
+df['url'] = list
+df.to_csv('testht.csv',index=False)
 
 #havingIP
 def havingIP(url):
@@ -342,13 +351,65 @@ for i in df.url:
 df['Web_Forwards'] = list
 df.to_csv('test1.csv',index=False)
 
+def certTO(messages):
+    try:
+        hostname = messages
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+            s.connect((hostname, 443))
+            cert = s.getpeercert()
+
+        subject = dict(x[0] for x in cert['subject'])
+        issued_to = subject['commonName']
+        if issued_to=="":
+            return 1
+        else:
+            return 0
+    except:
+        issued_to = "No certification Informations"
+        return 1
+    
+list=[]
+for i in df.url:
+    i = urlparse(i).netloc
+    c1 = certTO(i)
+    list.append(c1)
+df['cert_to']=list
+df.to_csv('test1.csv',index=False)    
+
+def certBY(messages):
+    try:
+        hostname = messages
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+            s.connect((hostname, 443))
+            cert = s.getpeercert()
+
+        issuer = dict(x[0] for x in cert['issuer'])
+        issued_by = issuer['commonName']
+        if issued_by == "":
+            return 1
+        else:
+            return 0
+    except:
+        issued_by = "No certification Information"
+        return 1
+    
+list=[]
+for i in df.url:
+    i = urlparse(i).netloc
+    c2 = certTO(i)
+    list.append(c2)
+df['cert_by']=list
+df.to_csv('test1.csv',index=False)  
+
 #loading model
-model = tf.keras.models.load_model('model.h5')
+model = tf.keras.models.load_model('modelGRU.h5')
 
 #loading saved test1.csv and predict using it
 pf1 = pd.read_csv('test1.csv')
 pf = pf1.drop(['url'],axis=1).copy()
-x = pf.values.reshape(1,14,1)
-print(x.shape)
-y = model.predict(x)
+#x = pf.values.reshape(1,14,1)
+#print(x.shape)
+y = model.predict(pf)
 print(y)

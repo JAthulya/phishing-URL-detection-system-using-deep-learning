@@ -143,7 +143,7 @@ def ageofdomain1(url):
 
 app = Flask(__name__)
 model = tf.keras.models.load_model('model1.h5')
-modelfeature = tf.keras.models.load_model('model.h5')
+modelfeature = tf.keras.models.load_model('modelLSTM.h5')
 
 @app.route('/')
 def home():
@@ -156,22 +156,29 @@ def predict():
     classes_y=''
     status=''
     showmsg1=''
+    a=''
+    b=''
+    urlstatus=''
     for i in request.form.values():
         
     #messages = [str(x) for x in request.form.values()]
         messages = i
         messages = urlparse(messages).netloc
         if messages =='':
-            status="Enter url in valid format"
+            status="Enter url in valid format Ex - ' https://www.example.com ' "
+            a=1
         else:
             status="URL is in valid format:"
+            a=2
         #reading the whitelist
         
         f=open("whitelist.txt","r")
         if messages in f.read():
             showmsg1 = "this is legitimate"
+            b=1
         else:
             showmsg1 = "whitelist does not have any record!"
+            b=2
             
         review = re.sub('[^a-zA-Z]',' ',messages)
         review = review.lower()
@@ -185,6 +192,13 @@ def predict():
         x_test = embedded_docs
         y_pred = model.predict(x_test)
         classes_y=np.round(y_pred).astype(int)
+        
+        if y_pred < 0.4:
+            urlstatus = "Legitimate URL"
+        elif 0.4 < y_pred < 0.6:
+            urlstatus = "This can be a Phishing URL"
+        else:
+            urlstatus = "Phishing URL"
         
         
         # if status==1:
@@ -539,10 +553,62 @@ def predict():
         df['Web_Forwards'] = list
         df.to_csv('test1.csv',index=False)
         
+        def certTO(messages):
+            try:
+                hostname = messages
+                ctx = ssl.create_default_context()
+                with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+                    s.connect((hostname, 443))
+                    cert = s.getpeercert()
+
+                subject = dict(x[0] for x in cert['subject'])
+                issued_to = subject['commonName']
+                if issued_to=="":
+                    return 1
+                else:
+                    return 0
+            except:
+                issued_to = "No certification Informations"
+                return 1
+            
+        list=[]
+        for i in df.url:
+            i = urlparse(i).netloc
+            c1 = certTO(i)
+            list.append(c1)
+        df['cert_to']=list
+        df.to_csv('test1.csv',index=False)    
+
+        def certBY(messages):
+            try:
+                hostname = messages
+                ctx = ssl.create_default_context()
+                with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+                    s.connect((hostname, 443))
+                    cert = s.getpeercert()
+
+                issuer = dict(x[0] for x in cert['issuer'])
+                issued_by = issuer['commonName']
+                if issued_by == "":
+                    return 1
+                else:
+                    return 0
+            except:
+                issued_by = "No certification Information"
+                return 1
+            
+        list=[]
+        for i in df.url:
+            i = urlparse(i).netloc
+            c2 = certTO(i)
+            list.append(c2)
+        df['cert_by']=list
+        df.to_csv('test1.csv',index=False) 
+        
         #predict using feature based trained model
-        pf1 = pd.read_csv('test2.csv')
+        pf1 = pd.read_csv('test1.csv')
         pf = pf1.drop(['url'],axis=1).copy()
-        x = pf.values.reshape(1,14,1)
+        x = pf.values.reshape(1,16,1)
         #y = modelfeature.predict(x)
         y = modelfeature.predict(x)
         
@@ -587,11 +653,15 @@ def predict():
         
         
         
-        
-        
+        if a==1:
+            showmsg1 = '';
+            y_pred = '';
+            classes_y = '';
+            y= '';
+            urlstatus='';
         
         #return render_template('index.html', prediction_text='url prediction -{}'.format(classes_y))
-    return render_template('index.html',status_value=status,hidden_msg=showmsg1 ,prediction_text=format(y_pred),prediction_text1=format(classes_y),URL_issued_by=format(issued_by),
+    return render_template('index.html',status_value=status,hidden_msg=showmsg1 ,prediction_text=format(y_pred),prediction_text1=format(classes_y),urlstatus=urlstatus,URL_issued_by=format(issued_by),
                            URL_issued_to=format(issued_to),created_date=createdDate,expired_date=expiredate
                            ,domain_age = domainAge,featurebase_predict=y)
            

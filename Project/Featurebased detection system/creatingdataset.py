@@ -9,6 +9,7 @@ import urllib
 import urllib.request
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
+import ssl,socket
 
 df = pd.read_csv('dataset.csv')
 
@@ -300,23 +301,48 @@ df = pd.read_csv('dataset.csv')
 # df['Mouse_Over'] = list
 # df.to_csv('test1.csv',index=False)
 
-def forwading(response):
-    if response == '':
-        return 1
-    else:
-        if len(response.history)<= 2:
-            return 0
-        else:
+def certTO(messages):
+    try:
+        hostname = messages
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+            s.connect((hostname, 443))
+            cert = s.getpeercert()
+
+        subject = dict(x[0] for x in cert['subject'])
+        issued_to = subject['commonName']
+        if issued_to=="":
             return 1
+        else:
+            return 0
+    except:
+        issued_to = "No certification Informations"
+        return 1
+    
+def certBY(messages):
+    try:
+        hostname = messages
+        ctx = ssl.create_default_context()
+        with ctx.wrap_socket(socket.socket(), server_hostname=hostname) as s:
+            s.connect((hostname, 443))
+            cert = s.getpeercert()
+
+        issuer = dict(x[0] for x in cert['issuer'])
+        issued_by = issuer['commonName']
+        if issued_by == "":
+            return 1
+        else:
+            return 0
+    except:
+        issued_by = "No certification Information"
+        return 1
+    
         
 
 list= []
 for i in df.url:
-    try:
-        response = requests.get(i)
-    except:
-        response = ''
-    forward = forwading(response)
+    domain = urlparse(i).netloc
+    forward = certBY(domain)
     list.append(forward)
-df['Web_Forwards'] = list
-df.to_csv('test1.csv',index=False)
+df['cert_by'] = list
+df.to_csv('features.csv',index=False)

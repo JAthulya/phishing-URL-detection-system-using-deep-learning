@@ -12,7 +12,7 @@ from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import GRU
 from tensorflow.keras.layers import Dense
 
-df1 = pd.read_csv('features.csv')
+df1 = pd.read_csv('features1.csv')
 #print(df.head())
 df = df1.drop(['url'],axis=1).copy()
 
@@ -33,7 +33,7 @@ x_test = x_test.values.reshape(x_test.shape[0],x_test.shape[1],1)
 
 #creating model
 model = Sequential()
-model.add(GRU(50,return_sequences=True, input_shape=(14,1)))
+model.add(GRU(50,return_sequences=True, input_shape=(16,1)))
 model.add(GRU(50, return_sequences=True))
 model.add(GRU(50))
 model.add(Dense(1))
@@ -42,12 +42,15 @@ model.summary()
 
 model.fit(x_train,y_train,validation_data=(x_test,y_test),epochs=10,batch_size=16,verbose=1)
 
-y_pred=model.predict(x) 
+y_pred=model.predict(x_test) 
 classes_y=np.round(y_pred).astype(int)
 
 from sklearn.metrics import confusion_matrix
-confusion_n = confusion_matrix(y,classes_y)
-from sklearn.metrics import accuracy_score
-print(accuracy_score(y, classes_y))
+confusion_n = confusion_matrix(y_test,classes_y)
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+print(accuracy_score(y_test, classes_y))
+print(precision_score(y_test, classes_y))
+print(recall_score(y_test, classes_y))
+print(f1_score(y_test, classes_y))
 
 model.save('modelGRU.h5')

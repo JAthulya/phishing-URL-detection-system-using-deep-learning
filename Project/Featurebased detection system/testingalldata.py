@@ -16,7 +16,7 @@ from tensorflow.keras.layers import Dense
 
 model = tf.keras.models.load_model('modelGRU.h5')
 
-df1 = pd.read_csv('features.csv')
+df1 = pd.read_csv('features1.csv')
 df = df1.drop(['url'],axis=1).copy()
 
 print(df.head())
@@ -39,8 +39,8 @@ ax = sns.heatmap(confusion_n, annot=True, cmap='Blues')
 # ax.set_ylabel('Actual Values ');
 
 ## Ticket labels - List must be in alphabetical order
-ax.xaxis.set_ticklabels(['True','False'])
-ax.yaxis.set_ticklabels(['False','True'])
+ax.xaxis.set_ticklabels(['0','1'])
+ax.yaxis.set_ticklabels(['0','1'])
 
 ## Display the visualization of the Confusion Matrix.
 # import plotter as plt
